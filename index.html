@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tristan Shah</title>
+<meta name="description" content="Tristan Shah — PhD student in Computer Science at Texas Tech University researching intrinsic motivation in dynamical systems, multi-agent coordination, robotics, and generative modeling.">
+<link rel="icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a fixed centered nav, a full-bleed hero on the Lorenz attractor,
+   then one narrow column per section with a sticky typewriter label on the left. */
+:root {
+  --bg:        #0a0d13;   /* deep navy-black, hue-biased toward the attractor */
+  --bg-2:      #10151e;   /* raised surface */
+  --line:      #222a38;
+  --fg:        #e9e6df;   /* warm off-white */
+  --fg-2:      #a39f95;   /* muted text */
+  --fg-3:      #6b6a66;   /* labels */
+  --accent:    #f0923d;   /* the orange trajectory in the Lorenz animation */
+  --accent-2:  #ffb56b;
+  --paper:     #ffffff;   /* white cards for the simulator clips */
+
+  --font-sans: "Geist", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --measure: 62ch;
+  --gutter: clamp(16px, 5vw, 48px);
+  --nav-h: 60px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 24px); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+img, video { max-width: 100%; display: block; }
+b, strong { font-weight: 600; color: var(--fg); }
+p { margin: 0; }
+
+/* ---------- nav ---------- */
+.nav {
+  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  height: var(--nav-h);
+  padding: env(safe-area-inset-top, 0px) var(--gutter) 0;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color .3s;
+}
+.nav.scrolled { border-bottom-color: var(--line); }
+.nav__links {
+  display: flex; gap: 4px; margin: 0; padding: 0; list-style: none;
+  max-width: 100%; overflow-x: auto; scrollbar-width: none;
+}
+.nav__links::-webkit-scrollbar { display: none; }
+.nav__links a {
+  display: block; padding: 6px 12px; border-radius: 999px;
+  font-family: var(--font-mono); font-size: 13px; letter-spacing: .02em;
+  color: var(--fg-2); white-space: nowrap;
+  transition: color .2s, background .2s;
+}
+.nav__links a:hover { color: var(--fg); }
+.nav__links a.active { color: var(--accent-2); background: var(--bg-2); }
+
+/* ---------- hero ---------- */
+.hero {
+  padding: calc(var(--nav-h) + clamp(40px, 7vw, 88px)) var(--gutter) clamp(48px, 7vw, 88px);
+}
+.hero__inner {
+  max-width: 1120px; width: 100%; margin: 0 auto;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
+  gap: 40px 64px; align-items: center;
+}
+.hero__eyebrow {
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--accent-2); margin-bottom: 20px;
+}
+.hero h1 {
+  font-weight: 500;
+  font-size: clamp(48px, 7.5vw, 96px); line-height: .98; letter-spacing: -0.04em;
+  margin: 0 0 24px; text-wrap: balance;
+}
+.hero__lede {
+  max-width: 44ch; font-size: clamp(17px, 2vw, 20px); line-height: 1.5; color: var(--fg-2);
+  text-wrap: pretty;
+}
+.hero__lede b { color: var(--fg); font-weight: 500; }
+.hero__actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+.hero__media {
+  position: relative; margin: 0; width: 100%; aspect-ratio: 7 / 6; border-radius: 24px; overflow: hidden;
+  background: var(--bg); border: 1px solid var(--line);
+  box-shadow: 0 30px 60px -30px rgba(0,0,0,.9);
+}
+.hero__media video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hero__media::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), inset 0 0 60px 20px var(--bg);
+}
+@media (max-width: 820px) {
+  .hero__inner { grid-template-columns: 1fr; }
+  .hero__media { max-width: 420px; }
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-radius: 999px; border: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 13px; color: var(--fg);
+  background: color-mix(in srgb, var(--bg-2) 70%, transparent);
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.btn:hover { border-color: var(--fg-3); background: var(--bg-2); transform: translateY(-1px); }
+.btn--accent { background: var(--accent); border-color: var(--accent); color: #140a02; font-weight: 500; }
+.btn--accent:hover { background: var(--accent-2); border-color: var(--accent-2); }
+.btn svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* ---------- sections ---------- */
+.section {
+  padding: clamp(72px, 10vw, 128px) var(--gutter);
+  border-top: 1px solid var(--line);
+}
+.section__inner {
+  max-width: 1120px; margin: 0 auto;
+  display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 32px 64px;
+}
+.section__label {
+  position: sticky; top: calc(var(--nav-h) + 32px); align-self: start;
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--fg-3);
+}
+.section__label::before {
+  content: ""; display: inline-block; width: 20px; height: 1px; background: var(--accent);
+  vertical-align: middle; margin-right: 10px;
+}
+.section h2 {
+  font-weight: 500;
+  font-size: clamp(32px, 4.2vw, 48px); line-height: 1.08; letter-spacing: -0.03em;
+  margin: 0 0 32px; text-wrap: balance;
+}
+/* the accent word in a heading is set in the typewriter face */
+.section h2 em {
+  font-style: normal; font-family: var(--font-mono); font-weight: 400;
+  color: var(--accent-2); letter-spacing: -0.02em; font-size: .86em;
+}
+.prose { max-width: var(--measure); display: grid; gap: 18px; color: var(--fg-2); }
+.prose a { color: var(--fg); border-bottom: 1px solid var(--fg-3); transition: border-color .2s; }
+.prose a:hover { border-bottom-color: var(--accent); }
+
+@media (max-width: 820px) {
+  .section__inner { grid-template-columns: 1fr; gap: 16px; }
+  .section__label { position: static; }
+}
+
+/* ---------- research ---------- */
+.theme { display: grid; gap: 24px; padding: 40px 0; border-top: 1px solid var(--line); }
+.theme:first-child { border-top: 0; padding-top: 0; }
+.theme:last-child { border-bottom: 1px solid var(--line); }
+.theme__head { display: grid; gap: 10px; max-width: var(--measure); }
+.theme__kicker { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-2); }
+.theme__q { font-size: clamp(22px, 2.6vw, 30px); font-weight: 500; letter-spacing: -0.025em; line-height: 1.25; text-wrap: balance; }
+.theme__papers { font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-3); line-height: 1.7; }
+.theme__papers a { color: var(--fg-2); border-bottom: 1px solid var(--line); }
+.theme__papers a:hover { color: var(--fg); border-bottom-color: var(--accent); }
+
+/* two full-width rows on a 12-column grid: four small tiles on top,
+   three large tiles below, so both rows end flush with the right edge */
+.strip { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; }
+.clip {
+  position: relative; aspect-ratio: 1; grid-column: span 3;
+  border-radius: 8px; overflow: hidden; background: var(--paper);
+  isolation: isolate; margin: 0;
+  box-shadow: 0 20px 40px -24px rgba(0,0,0,.9);
+}
+.clip--big { grid-column: span 4; }
+.clip video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.clip--dark { background: #0d2a4a; }
+.clip--dark video, .clip--crop video { object-fit: cover; }
+.clip__name {
+  position: absolute; left: 10px; bottom: 8px; z-index: 1;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: #3a3a3a; opacity: 0; transition: opacity .2s;
+}
+.clip--dark .clip__name { color: #cfe3ff; }
+.clip:hover .clip__name { opacity: 1; }
+
+.feature { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.feature .clip { width: 100%; max-width: 520px; aspect-ratio: 1; }
+@media (max-width: 820px) {
+  .clip { grid-column: span 6; }
+  .clip--big { grid-column: span 12; }
+  .feature { grid-template-columns: 1fr; }
+}
+
+/* ---------- news ---------- */
+.news { margin: 0; padding: 0; list-style: none; max-width: 720px; }
+.news li {
+  display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 20px;
+  padding: 20px 0; border-top: 1px solid var(--line);
+}
+.news li:last-child { border-bottom: 1px solid var(--line); }
+.news__date { font-family: var(--font-mono); font-size: 13px; color: var(--fg-3); padding-top: 4px; }
+.news__body { display: grid; gap: 6px; }
+.news__tag {
+  display: inline-block; width: max-content;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--accent-2); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  border-radius: 999px; padding: 2px 9px;
+}
+.news__text { color: var(--fg-2); }
+.news__text a { color: var(--fg); border-bottom: 1px solid var(--fg-3); }
+.news__text em { color: var(--fg); font-style: normal; font-weight: 500; }
+@media (max-width: 560px) {
+  .news li { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ---------- publications ---------- */
+.pubs { margin: 0; padding: 0; list-style: none; counter-reset: pub; max-width: 820px; }
+.pubs li {
+  display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 16px;
+  padding: 22px 0; border-top: 1px solid var(--line);
+}
+.pubs li:last-child { border-bottom: 1px solid var(--line); }
+.pubs li::before {
+  counter-increment: pub; content: counter(pub, decimal-leading-zero);
+  font-family: var(--font-mono); font-size: 13px; color: var(--fg-3); padding-top: 4px;
+}
+.pub { display: grid; gap: 6px; }
+.pub__title { font-size: 18px; font-weight: 500; letter-spacing: -0.015em; line-height: 1.35; }
+.pub__authors { font-size: 15px; color: var(--fg-2); }
+.pub__authors b { color: var(--fg); }
+.pub__venue { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .04em; color: var(--fg-3); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.pub__note { color: var(--accent-2); }
+.pub__note::before { content: "·"; color: var(--fg-3); margin-right: 10px; }
+.pub__links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.pub__links a {
+  font-family: var(--font-mono); font-size: 12.5px; padding: 4px 11px; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--fg-2); transition: border-color .2s, color .2s;
+}
+.pub__links a:hover { border-color: var(--accent); color: var(--fg); }
+
+/* ---------- contact / footer ---------- */
+.contact__email {
+  font-family: var(--font-mono); font-weight: 400;
+  font-size: clamp(20px, 3.4vw, 36px); letter-spacing: -0.02em; line-height: 1.2;
+  color: var(--fg); border-bottom: 1px solid var(--fg-3); display: inline; transition: border-color .2s;
+  overflow-wrap: anywhere;
+}
+.contact__email:hover { border-bottom-color: var(--accent); }
+.footer {
+  padding: 32px var(--gutter) calc(32px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 12px; color: var(--fg-3);
+}
+.footer__inner { max-width: 1120px; margin: 0 auto; }
+
+/* ---------- motion ---------- */
+.reveal { opacity: 1; transform: none; }
+.js .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+.js .reveal.in { opacity: 1; transform: none; }
+.hero .reveal { transition-delay: var(--d, 0s); }
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal { opacity: 1; transform: none; transition: none; }
+  .btn:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav" aria-label="Site">
+  <ul class="nav__links">
+    <li><a href="#research">Research</a></li>
+    <li><a href="#news">News</a></li>
+    <li><a href="#publications">Publications</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero" id="top">
+  <div class="hero__inner">
+    <div>
+      <p class="hero__eyebrow reveal" style="--d:.05s">PhD student · Texas Tech University · Koh Family Scholar</p>
+      <h1 class="reveal" style="--d:.15s">Tristan Shah</h1>
+      <p class="hero__lede reveal" style="--d:.3s">
+        Researching <b>intrinsic motivation in dynamical systems</b>, with applications in
+        multi-agent coordination, robotics, and generative modeling.
+      </p>
+      <div class="hero__actions reveal" style="--d:.45s">
+        <a class="btn" href="https://scholar.google.com/citations?user=X1K7z6YAAAAJ&hl=en&oi=ao" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 1 10l11 7 9-5.7V18h2v-8L12 3zm0 2.4L18.9 10 12 14.5 5.1 10 12 5.4zM6 13.6v3.6c0 1.5 2.7 3.8 6 3.8s6-2.3 6-3.8v-3.6l-6 3.8-6-3.8z"/></svg>
+          Scholar
+        </a>
+        <a class="btn" href="https://github.com/tristan-shah" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5A12 12 0 0 0 8.2 23.9c.6.1.8-.3.8-.6v-2.2c-3.3.7-4-1.4-4-1.4-.6-1.4-1.4-1.8-1.4-1.8-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.8-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2-.1-.3-.5-1.5.1-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.3 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .5z"/></svg>
+          GitHub
+        </a>
+        <a class="btn" href="https://www.linkedin.com/in/tristan-shah" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2zM8 19H5V9.5h3V19zM6.5 8.2a1.7 1.7 0 1 1 0-3.5 1.7 1.7 0 0 1 0 3.5zM19 19h-3v-4.6c0-1.1 0-2.5-1.5-2.5s-1.8 1.2-1.8 2.4V19h-3V9.5h2.9v1.3c.4-.8 1.4-1.5 2.8-1.5 3 0 3.6 2 3.6 4.6V19z"/></svg>
+          LinkedIn
+        </a>
+        <a class="btn" href="https://orcid.org/0009-0007-5024-1733" target="_blank" rel="noopener">ORCID</a>
+        <a class="btn" href="papers/Resume.pdf" target="_blank" rel="noopener">CV ↗</a>
+      </div>
+    </div>
+    <figure class="hero__media reveal" style="--d:.2s">
+      <video autoplay muted loop playsinline preload="auto" aria-hidden="true">
+        <source src="media/lorenz.mp4" type="video/mp4">
+      </video>
+    </figure>
+  </div>
+</header>
+
+<!-- ============ RESEARCH ============ -->
+<section class="section" id="research">
+  <div class="section__inner">
+    <div class="section__label">Research</div>
+    <div>
+      <article class="theme reveal">
+        <div class="theme__head">
+          <p class="theme__kicker">Intrinsic motivation</p>
+          <p class="theme__q">How can an agent learn useful primitive behaviors without any supervision?</p>
+          <p class="theme__papers">
+            <a href="https://arxiv.org/abs/2601.22449" target="_blank" rel="noopener">Emergence of Physical Intelligence via Controllable Information Production</a> · NeurIPS 2026<br>
+            <a href="https://arxiv.org/abs/2610.02012" target="_blank" rel="noopener">Bellman Meets Lyapunov: Unsupervised RL via Mastering Chaos</a> · arXiv 2026
+          </p>
+        </div>
+        <div class="strip">
+          <figure class="clip clip--crop"><video muted loop playsinline preload="metadata" width="908" height="720"><source src="media/cart_pole.mp4" type="video/mp4"></video><figcaption class="clip__name">Cart-pole</figcaption></figure>
+          <figure class="clip"><video muted loop playsinline preload="metadata" width="726" height="720"><source src="media/double_pendulum.mp4" type="video/mp4"></video><figcaption class="clip__name">Double pendulum</figcaption></figure>
+          <figure class="clip"><video muted loop playsinline preload="metadata" width="320" height="720"><source src="media/triple_pendulum.mp4" type="video/mp4"></video><figcaption class="clip__name">Triple pendulum</figcaption></figure>
+          <figure class="clip"><video muted loop playsinline preload="metadata" width="608" height="608"><source src="media/rollout.mp4" type="video/mp4"></video><figcaption class="clip__name">Ball-in-box</figcaption></figure>
+          <figure class="clip clip--big clip--dark"><video muted loop playsinline preload="metadata" width="720" height="720"><source src="media/hopper.mp4" type="video/mp4"></video><figcaption class="clip__name">Hopper</figcaption></figure>
+          <figure class="clip clip--big clip--dark"><video muted loop playsinline preload="metadata" width="720" height="720"><source src="media/walker.mp4" type="video/mp4"></video><figcaption class="clip__name">Walker</figcaption></figure>
+          <figure class="clip clip--big"><video muted loop playsinline preload="metadata" width="496" height="720"><source src="media/gibbon.mp4" type="video/mp4"></video><figcaption class="clip__name">Gibbon</figcaption></figure>
+        </div>
+      </article>
+
+      <article class="theme reveal">
+        <div class="feature">
+          <div class="theme__head">
+            <p class="theme__kicker">Multi-agent coordination</p>
+            <p class="theme__q">What behaviors emerge in a group of agents that is never told what to do?</p>
+            <p class="theme__papers">
+              <a href="https://arxiv.org/abs/2604.21155" target="_blank" rel="noopener">Multi-Agent Empowerment and Emergence of Complex Behavior in Groups</a> · CoLLAs 2026
+            </p>
+          </div>
+          <figure class="clip"><video muted loop playsinline preload="metadata" width="900" height="900"><source src="media/flock.mp4" type="video/mp4"></video><figcaption class="clip__name">Flock empowerment</figcaption></figure>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEWS ============ -->
+<section class="section" id="news">
+  <div class="section__inner">
+    <div class="section__label">News</div>
+    <div>
+      <h2 class="reveal">Recent <em>updates</em></h2>
+      <ol class="news reveal" id="news-list"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PUBLICATIONS ============ -->
+<section class="section" id="publications">
+  <div class="section__inner">
+    <div class="section__label">Publications</div>
+    <div>
+      <h2 class="reveal"><em>Papers</em></h2>
+      <ol class="pubs reveal" id="pub-list"></ol>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTACT ============ -->
+<section class="section" id="contact">
+  <div class="section__inner">
+    <div class="section__label">Contact</div>
+    <div>
+      <h2 class="reveal">Get in <em>touch</em></h2>
+      <p class="reveal"><a class="contact__email" href="mailto:trisshah@ttu.edu">trisshah@ttu.edu</a></p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer__inner">© <span id="year"></span> Tristan Shah</div>
+</footer>
+
+<!-- Editable content lives in these two files -->
+<script src="content/news.js"></script>
+<script src="content/publications.js"></script>
+<script>
+(function () {
+  document.documentElement.classList.add('js');
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ---- render news ----
+  var news = window.SITE_NEWS || [];
+  document.getElementById('news-list').innerHTML = news.map(function (n) {
+    return '<li>' +
+      '<div class="news__date">' + n.date + '</div>' +
+      '<div class="news__body">' +
+        (n.tag ? '<span class="news__tag">' + n.tag + '</span>' : '') +
+        '<p class="news__text">' + n.text + '</p>' +
+      '</div></li>';
+  }).join('');
+
+  // ---- render publications ----
+  var pubs = window.SITE_PUBLICATIONS || [];
+  document.getElementById('pub-list').innerHTML = pubs.map(function (p) {
+    var links = (p.links || []).map(function (l) {
+      return '<a href="' + l.url + '" target="_blank" rel="noopener">' + l.label + '</a>';
+    }).join('');
+    return '<li><div class="pub">' +
+      '<div class="pub__title">' + p.title + '</div>' +
+      '<div class="pub__authors">' + p.authors + '</div>' +
+      '<div class="pub__venue"><span>' + p.venue + '</span>' + (p.note ? '<span class="pub__note">' + p.note + '</span>' : '') + '</div>' +
+      (links ? '<div class="pub__links">' + links + '</div>' : '') +
+    '</div></li>';
+  }).join('');
+
+  // ---- reveal on scroll ----
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.hero .reveal').forEach(function (el) { el.classList.add('in'); });
+  var reveals = document.querySelectorAll('.reveal:not(.in)');
+  if (reduce || !('IntersectionObserver' in window)) {
+    reveals.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    var ro = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.classList.add('in'); ro.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    reveals.forEach(function (el) { ro.observe(el); });
+  }
+
+  // ---- play clips only while visible (saves CPU / battery) ----
+  var clips = document.querySelectorAll('.clip video');
+  if ('IntersectionObserver' in window && !reduce) {
+    var vo = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting) { v.play().catch(function () {}); } else { v.pause(); }
+      });
+    }, { rootMargin: '200px 0px', threshold: 0.01 });
+    clips.forEach(function (v) { vo.observe(v); });
+  } else {
+    clips.forEach(function (v) { v.play().catch(function () {}); });
+  }
+
+  // ---- make sure the hero animation runs (some browsers ignore autoplay) ----
+  var heroVideo = document.querySelector('.hero__media video');
+  if (heroVideo && !reduce) {
+    var nudge = function () { heroVideo.play().catch(function () {}); };
+    nudge();
+    heroVideo.addEventListener('canplay', nudge);
+    document.addEventListener('visibilitychange', nudge);
+    window.addEventListener('pointerdown', nudge, { once: true });
+    window.addEventListener('scroll', nudge, { once: true, passive: true });
+  }
+
+  // ---- nav: scrolled state + active link ----
+  var nav = document.querySelector('.nav');
+  var links = Array.prototype.slice.call(document.querySelectorAll('.nav__links a'));
+  var sections = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    nav.classList.toggle('scrolled', window.scrollY > 10);
+    var y = window.scrollY + window.innerHeight * 0.35;
+    var current = -1;
+    sections.forEach(function (s, i) { if (s && s.offsetTop <= y) current = i; });
+    links.forEach(function (a, i) { a.classList.toggle('active', i === current); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>
